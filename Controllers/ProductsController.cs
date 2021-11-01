@@ -66,22 +66,53 @@ namespace InsuranceIntegration.Controllers
             nextToken = contract.NextTocken;
             //Идентификатор договора
             string contractId = contract.SessionContractID;
-
             //--------------------------------------------------------------Получение списка характеристик договора-----------------------------------------------------------------------
-            ISAIS_GetInsuranceContractCharacteristicListResponse characteristics = client.GetInsuranceContractCharacteristicList(sessionId, nextToken, contractId);
-            nextToken = characteristics.NextTocken;
 
-            //ISAIS_InsuranceContractChar[] charVal = characteristics.InsuranceContractCharList;
-            /*List<ISAIS_InsuranceContractCharValue> value = new List<ISAIS_InsuranceContractCharValue>();
-            foreach (ISAIS_InsuranceContractChar item in charVal)
+            ISAIS_SendInsuranceContractCharacteristicValuesResponse sendChar = new ISAIS_SendInsuranceContractCharacteristicValuesResponse();
+            int i = 0;
+            ISAIS_GetInsuranceContractCharacteristicListResponse characteristics = new ISAIS_GetInsuranceContractCharacteristicListResponse();
+            ISAIS_InsuranceContractCharValue value = new ISAIS_InsuranceContractCharValue();
+            do
             {
-                value.Add(new ISAIS_InsuranceContractCharValue { CharacteristicTypeID = item.CharacteristicTypeID, CharacteristicValue = item.CharDefaultValue });
-            }*/
+                characteristics = client.GetInsuranceContractCharacteristicList(sessionId, nextToken, contractId);
+                nextToken = characteristics.NextTocken;
+                ISAIS_InsuranceContractChar[] chars = characteristics.InsuranceContractCharList;
+                //--------------------------------------------------------------Передача значений характеристик договора-----------------------------------------------------------------------
+
+                foreach (var item in chars)
+                {
+                    value.CharacteristicTypeID = item.CharacteristicTypeID;
+                    if (i < 2) 
+                        value.CharacteristicValue = "20211101 09:00:00";
+                    else
+                        value.CharacteristicValue = "20211202 09:00:00";
+                }
+                ISAIS_InsuranceContractCharValue[] charValue = { value };
+                sendChar = client.SendInsuranceContractCharacteristicValues(sessionId, nextToken, contractId, charValue);
+                nextToken = sendChar.NextTocken;
+
+                i++;
+            }
+            while (i < 4);
+
+            /*List<ISAIS_GetInsuranceContractCharacteristicListResponse> chars = new List<ISAIS_GetInsuranceContractCharacteristicListResponse>();
+            ISAIS_GetInsuranceContractCharacteristicListResponse characteristics = new ISAIS_GetInsuranceContractCharacteristicListResponse();
+            do
+            {
+                
+                chars.Add(characteristics);
+
+                ISAIS_InsuranceContractChar[] charVal = characteristics.InsuranceContractCharList;
+                List<ISAIS_InsuranceContractCharValue> value = new List<ISAIS_InsuranceContractCharValue>();
+                foreach (ISAIS_InsuranceContractChar item in charVal)
+                {
+                    value.Add(new ISAIS_InsuranceContractCharValue { CharacteristicTypeID = item.CharacteristicTypeID, CharacteristicValue = item.CharDefaultValue });
+                }
+            }
+            while (characteristics.FurtherCharRequestRequired != 0);*/
 
 
-            //--------------------------------------------------------------Передача значений характеристик договора-----------------------------------------------------------------------
 
-            //var sendChar = client.SendInsuranceContractCharacteristicValues(sessionId, nextToken, contractId, value.ToArray());
 
             //--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
             //ISAIS_GetInsuranceContractDataStatusResponse status = client.GetInsuranceContractDataStatus(sessionId, nextToken, contractId);
