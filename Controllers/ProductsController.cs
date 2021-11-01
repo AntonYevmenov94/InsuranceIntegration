@@ -82,10 +82,17 @@ namespace InsuranceIntegration.Controllers
                 foreach (var item in chars)
                 {
                     value.CharacteristicTypeID = item.CharacteristicTypeID;
-                    if (i < 2) 
+                    if(item.CharacteristicTypeID == "100001" || item.CharacteristicTypeID == "100002")
                         value.CharacteristicValue = "20211101 09:00:00";
-                    else
+                    if (item.CharacteristicTypeID == "100003")
                         value.CharacteristicValue = "20211202 09:00:00";
+                    if(item.CharacteristicTypeID == "110001")
+                        value.CharacteristicValue = "1";
+                    if (item.CharacteristicTypeID == "110002")
+                        value.CharacteristicValue = "1";
+                    if (item.CharacteristicTypeID == "7703103411932")
+                        value.CharacteristicValue = "100013";
+
                 }
                 ISAIS_InsuranceContractCharValue[] charValue = { value };
                 sendChar = client.SendInsuranceContractCharacteristicValues(sessionId, nextToken, contractId, charValue);
@@ -93,7 +100,7 @@ namespace InsuranceIntegration.Controllers
 
                 i++;
             }
-            while (i < 4);
+            while (i < 7);
 
             /*List<ISAIS_GetInsuranceContractCharacteristicListResponse> chars = new List<ISAIS_GetInsuranceContractCharacteristicListResponse>();
             ISAIS_GetInsuranceContractCharacteristicListResponse characteristics = new ISAIS_GetInsuranceContractCharacteristicListResponse();
