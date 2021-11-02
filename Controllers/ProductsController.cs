@@ -13,7 +13,7 @@ namespace InsuranceIntegration.Controllers
     {
         AISIntegrationServiceClient client = new AISIntegrationServiceClient();
 
-        public ISAIS_GetInsuranceContractCharacteristicListResponse GetAllProducts()
+        public List<ISAIS_GetInsuranceContractCharacteristicListResponse> GetAllProducts()
         {
             string sPasswordChallenge = null;
 
@@ -69,16 +69,18 @@ namespace InsuranceIntegration.Controllers
             //--------------------------------------------------------------Получение списка характеристик договора-----------------------------------------------------------------------
 
             ISAIS_SendInsuranceContractCharacteristicValuesResponse sendChar = new ISAIS_SendInsuranceContractCharacteristicValuesResponse();
-            int i = 0;
+            List<ISAIS_GetInsuranceContractCharacteristicListResponse> lists = new List<ISAIS_GetInsuranceContractCharacteristicListResponse>();
             ISAIS_GetInsuranceContractCharacteristicListResponse characteristics = new ISAIS_GetInsuranceContractCharacteristicListResponse();
             ISAIS_InsuranceContractCharValue value = new ISAIS_InsuranceContractCharValue();
             do
             {
+                lists.Add(characteristics);
                 characteristics = client.GetInsuranceContractCharacteristicList(sessionId, nextToken, contractId);
                 nextToken = characteristics.NextTocken;
+                if (characteristics.FurtherCharRequestRequired == ISAIS.ISAIS_FurtherCharRequestRequired.No)
+                    break;
                 ISAIS_InsuranceContractChar[] chars = characteristics.InsuranceContractCharList;
                 //--------------------------------------------------------------Передача значений характеристик договора-----------------------------------------------------------------------
-
                 foreach (var item in chars)
                 {
                     value.CharacteristicTypeID = item.CharacteristicTypeID;
@@ -92,41 +94,83 @@ namespace InsuranceIntegration.Controllers
                         value.CharacteristicValue = "1";
                     if (item.CharacteristicTypeID == "7703103411932")
                         value.CharacteristicValue = "100013";
-
+                    if (item.CharacteristicTypeID == "7703091661236")
+                        value.CharacteristicValue = "12";
+                    if (item.CharacteristicTypeID == "981150001415584572")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "981150001415584575")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "7701470357763")
+                        value.CharacteristicValue = "840";
+                    if (item.CharacteristicTypeID == "7701470358108")
+                        value.CharacteristicValue = "840";
+                    if (item.CharacteristicTypeID == "98115000136064698")
+                        value.CharacteristicValue = "8";
+                    if (item.CharacteristicTypeID == "7701456400852")
+                        value.CharacteristicValue = "1";
+                    if (item.CharacteristicTypeID == "981150001415584578")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "98115000136064712")
+                        value.CharacteristicValue = "10";
+                    if (item.CharacteristicTypeID == "981150001415585008")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "981150001415584590")
+                        value.CharacteristicValue = "1";
+                    if (item.CharacteristicTypeID == "981150001415584593")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "981150001415584596")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "98115000135723927")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "98115000137072886")
+                        value.CharacteristicValue = "10";
+                    if (item.CharacteristicTypeID == "7702247554158")
+                        value.CharacteristicValue = "";
+                    if (item.CharacteristicTypeID == "200000")
+                        value.CharacteristicValue = "7702828465963";
+                    if (item.CharacteristicTypeID == "98110468156157200")
+                        value.CharacteristicValue = "11";
+                    if (item.CharacteristicTypeID == "98115000136089401")
+                        value.CharacteristicValue = "30001";
+                    if (item.CharacteristicTypeID == "981150001415584605")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "981150001415584608")
+                        value.CharacteristicValue = "1";
+                    if (item.CharacteristicTypeID == "981150001415584611")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "981150001415585284")
+                        value.CharacteristicValue = "12";
+                    if (item.CharacteristicTypeID == "98115000136082788")
+                        value.CharacteristicValue = "0";
+                    if (item.CharacteristicTypeID == "981150001415584617")
+                        value.CharacteristicValue = "0";
                 }
                 ISAIS_InsuranceContractCharValue[] charValue = { value };
                 sendChar = client.SendInsuranceContractCharacteristicValues(sessionId, nextToken, contractId, charValue);
                 nextToken = sendChar.NextTocken;
-
-                i++;
             }
-            while (i < 7);
-
-            /*List<ISAIS_GetInsuranceContractCharacteristicListResponse> chars = new List<ISAIS_GetInsuranceContractCharacteristicListResponse>();
-            ISAIS_GetInsuranceContractCharacteristicListResponse characteristics = new ISAIS_GetInsuranceContractCharacteristicListResponse();
-            do
-            {
-                
-                chars.Add(characteristics);
-
-                ISAIS_InsuranceContractChar[] charVal = characteristics.InsuranceContractCharList;
-                List<ISAIS_InsuranceContractCharValue> value = new List<ISAIS_InsuranceContractCharValue>();
-                foreach (ISAIS_InsuranceContractChar item in charVal)
-                {
-                    value.Add(new ISAIS_InsuranceContractCharValue { CharacteristicTypeID = item.CharacteristicTypeID, CharacteristicValue = item.CharDefaultValue });
-                }
-            }
-            while (characteristics.FurtherCharRequestRequired != 0);*/
-
-
-
+            while (true);
 
             //--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
-            //ISAIS_GetInsuranceContractDataStatusResponse status = client.GetInsuranceContractDataStatus(sessionId, nextToken, contractId);
+            
+            ISAIS_GetInsuranceContractDataStatusResponse status = client.GetInsuranceContractDataStatus(sessionId, nextToken, contractId);
+            nextToken = status.NextTocken;
+
+            //--------------------------------------------------------------Получение страхового тарифа и графика платежей-----------------------------------------------------------------------
+
+            ISAIS_GetInsuranceContractTariffResponse tarif = client.GetInsuranceContractTariff(sessionId, nextToken, contractId);
+            nextToken = tarif.NextTocken;
+
+            //--------------------------------------------------------------Получение оферты по договору страхования-----------------------------------------------------------------------
+
+            ISAIS_ContractPolis polis = new ISAIS_ContractPolis();
+            polis.ContractFormCode = "1";
+            polis.ContractNumber = "2";
+            polis.ContractSeries = "3";
+            ISAIS_GetInsuranceContractOfferResponse offer = client.GetInsuranceContractOffer(sessionId, nextToken, contractId, polis);
 
 
-
-            return characteristics;
+            return lists;
         }
 
         public IHttpActionResult GetProduct(int id)
