@@ -13,7 +13,7 @@ namespace InsuranceIntegration.Controllers
     {
         AISIntegrationServiceClient client = new AISIntegrationServiceClient();
 
-        public List<ISAIS_GetInsuranceContractCharacteristicListResponse> GetAllProducts()
+        public ISAIS_GetInsuranceContractOfferResponse GetAllProducts()
         {
             string sPasswordChallenge = null;
 
@@ -164,13 +164,13 @@ namespace InsuranceIntegration.Controllers
             //--------------------------------------------------------------Получение оферты по договору страхования-----------------------------------------------------------------------
 
             ISAIS_ContractPolis polis = new ISAIS_ContractPolis();
-            polis.ContractFormCode = "1";
-            polis.ContractNumber = "2";
-            polis.ContractSeries = "3";
+            polis.ContractFormCode = "2РН";
+            polis.ContractNumber = "5000";
+            polis.ContractSeries = "EI";
             ISAIS_GetInsuranceContractOfferResponse offer = client.GetInsuranceContractOffer(sessionId, nextToken, contractId, polis);
 
 
-            return lists;
+            return offer;
         }
 
         public IHttpActionResult GetProduct(int id)
