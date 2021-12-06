@@ -13,7 +13,7 @@ namespace InsuranceIntegration.Controllers
     {
         AISIntegrationServiceClient client = new AISIntegrationServiceClient();
 
-        public ISAIS_GetInsuranceContractOfferResponse GetAllProducts()
+        public ISAIS_InsuranceContractCompletedResponse GetAllProducts()
         {
             string sPasswordChallenge = null;
 
@@ -164,14 +164,44 @@ namespace InsuranceIntegration.Controllers
             //--------------------------------------------------------------Получение оферты по договору страхования-----------------------------------------------------------------------
 
             ISAIS_ContractPolis polis = new ISAIS_ContractPolis();
-            polis.ContractFormCode = "2РН";
-            polis.ContractNumber = "5000";
+            polis.ContractFormCode = "2РН/2РП";
+            polis.ContractNumber = "0012222";
             polis.ContractSeries = "EI";
             ISAIS_GetInsuranceContractOfferResponse offer = client.GetInsuranceContractOffer(sessionId, nextToken, contractId, polis);
+            nextToken = offer.NextTocken;
 
+            //--------------------------------------------------------------Начало транзакции оплаты по договору-----------------------------------------------------------------------
 
-            return offer;
+            ISAIS_InsuranceContractPayTransactionBeginResponse begin_trans = client.InsuranceContractPayTransactionBegin(sessionId, nextToken, contractId, ISAIS_PaymentProcType.Undefined);
+            nextToken = begin_trans.NextTocken;
+
+            //--------------------------------------------------------------Получение страхового тарифа и графика платежей-----------------------------------------------------------------------
+
+            tarif = client.GetInsuranceContractTariff(sessionId, nextToken, contractId);
+            nextToken = tarif.NextTocken;
+            ISAIS_PaymentSchedule[] schedule = tarif.PaymentSchedule;
+            var payAmount = schedule[0].PayAmount;
+            var tariffCurrency = tarif.ContractTariff.TariffCurrency;
+            string contractTransID = begin_trans.ContractTransID;
+
+            //--------------------------------------------------------------Завершение транзакции оплаты части взноса-----------------------------------------------------------------------
+
+            ISAIS_InsuranceContractPayTransactionEndResponse end_trans = client.InsuranceContractPayTransactionEnd(sessionId, nextToken, contractId, contractTransID, payAmount, tariffCurrency, ISAIS_TransactionStatus.Success, "Ok");
+            nextToken = end_trans.NextTocken;
+
+            /*//--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
+
+            ISAIS_GetInsuranceContractStatusResponse new_status = client.GetInsuranceContractStatus(sessionId, nextToken, contractId);
+            nextToken = status.NextTocken;*/
+
+            //--------------------------------------------------------------Регистрация заключения договора со стороны Клиента-----------------------------------------------------------------------
+
+            ISAIS_InsuranceContractCompletedResponse contractCompleted = client.InsuranceContractCompleted(sessionId, nextToken, contractId, contractTransID);
+
+            return contractCompleted;
         }
+
+
 
         public IHttpActionResult GetProduct(int id)
         {
