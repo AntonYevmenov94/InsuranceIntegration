@@ -76,6 +76,7 @@ namespace InsuranceIntegration.Controllers
             {
                 lists.Add(characteristics);
                 characteristics = client.GetInsuranceContractCharacteristicList(sessionId, nextToken, contractId);
+                
                 nextToken = characteristics.NextTocken;
                 if (characteristics.FurtherCharRequestRequired == ISAIS.ISAIS_FurtherCharRequestRequired.No)
                     break;
@@ -84,11 +85,11 @@ namespace InsuranceIntegration.Controllers
                 foreach (var item in chars)
                 {
                     value.CharacteristicTypeID = item.CharacteristicTypeID;
-                    if(item.CharacteristicTypeID == "100001" || item.CharacteristicTypeID == "100002")
-                        value.CharacteristicValue = "20211101 09:00:00";
+                    if (item.CharacteristicTypeID == "100001" || item.CharacteristicTypeID == "100002")
+                        value.CharacteristicValue = "20211210 09:00:00";
                     if (item.CharacteristicTypeID == "100003")
-                        value.CharacteristicValue = "20211202 09:00:00";
-                    if(item.CharacteristicTypeID == "110001")
+                        value.CharacteristicValue = "20220110 23:59:59";
+                    if (item.CharacteristicTypeID == "110001")
                         value.CharacteristicValue = "1";
                     if (item.CharacteristicTypeID == "110002")
                         value.CharacteristicValue = "1";
@@ -129,7 +130,7 @@ namespace InsuranceIntegration.Controllers
                     if (item.CharacteristicTypeID == "200000")
                         value.CharacteristicValue = "7702828465963";
                     if (item.CharacteristicTypeID == "98110468156157200")
-                        value.CharacteristicValue = "11";
+                        value.CharacteristicValue = "202002193347182795";
                     if (item.CharacteristicTypeID == "98115000136089401")
                         value.CharacteristicValue = "30001";
                     if (item.CharacteristicTypeID == "981150001415584605")
@@ -152,7 +153,7 @@ namespace InsuranceIntegration.Controllers
             while (true);
 
             //--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
-            
+
             ISAIS_GetInsuranceContractDataStatusResponse status = client.GetInsuranceContractDataStatus(sessionId, nextToken, contractId);
             nextToken = status.NextTocken;
 
@@ -165,7 +166,7 @@ namespace InsuranceIntegration.Controllers
 
             ISAIS_ContractPolis polis = new ISAIS_ContractPolis();
             polis.ContractFormCode = "2РН/2РП";
-            polis.ContractNumber = "0012222";
+            polis.ContractNumber = "12010";
             polis.ContractSeries = "EI";
             ISAIS_GetInsuranceContractOfferResponse offer = client.GetInsuranceContractOffer(sessionId, nextToken, contractId, polis);
             nextToken = offer.NextTocken;
@@ -190,7 +191,6 @@ namespace InsuranceIntegration.Controllers
             nextToken = end_trans.NextTocken;
 
             /*//--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
-
             ISAIS_GetInsuranceContractStatusResponse new_status = client.GetInsuranceContractStatus(sessionId, nextToken, contractId);
             nextToken = status.NextTocken;*/
 
