@@ -9,6 +9,7 @@ using System.Web.Http;
 using System.Collections.Specialized;
 using System.Web.Http.Controllers;
 using System.Web;
+using System.Text;
 
 namespace InsuranceIntegration.Controllers
 {
@@ -20,11 +21,7 @@ namespace InsuranceIntegration.Controllers
         {
             HttpContextWrapper postParams = (HttpContextWrapper)Request.Properties["MS_HttpContext"];
             var parameters = postParams.Request.Form;
-
-            //Проверка параметров запроса
-            /*if (parameters.Count < 30)
-                return "Введены не все параметры";*/
-
+            
             string sPasswordChallenge = null;
 
             string sUserName = "ergo_test_60001";
@@ -119,7 +116,8 @@ namespace InsuranceIntegration.Controllers
 
                     //Ассистанс(100008-BALT ASSISTANCE LTD, 100010-Kaliptus Assistance, 100013-тест)
                     if (item.CharacteristicTypeID == "7703103411932")
-                        //value.CharacteristicValue = "100013";
+                        value.CharacteristicValue = parameters.Get(item.CharacteristicTypeID);
+                    //value.CharacteristicValue = "100013";
 
                     //Вводимый срок пребывания
                     if (item.CharacteristicTypeID == "7703091661236")
@@ -249,36 +247,69 @@ namespace InsuranceIntegration.Controllers
                 ISAIS_InsuranceContractCharValue[] charValue = { value };
                 sendChar = client.SendInsuranceContractCharacteristicValues(sessionId, nextToken, contractId, charValue);
                 nextToken = sendChar.NextTocken;
+                if(sendChar.responseCode != ISAIS_ReturnCode.OK)
+                {
+                    return sendChar.responseMessage;
+                }
             }
             while (true);
+
 
             //--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
 
             ISAIS_GetInsuranceContractDataStatusResponse status = client.GetInsuranceContractDataStatus(sessionId, nextToken, contractId);
+            if (status.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return status.responseMessage;
+            }
             nextToken = status.NextTocken;
 
             //--------------------------------------------------------------Получение страхового тарифа и графика платежей-----------------------------------------------------------------------
 
             ISAIS_GetInsuranceContractTariffResponse tarif = client.GetInsuranceContractTariff(sessionId, nextToken, contractId);
+            if (tarif.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return tarif.responseMessage;
+            }
             nextToken = tarif.NextTocken;
 
             //--------------------------------------------------------------Получение оферты по договору страхования-----------------------------------------------------------------------
 
             ISAIS_ContractPolis polis = new ISAIS_ContractPolis();
-            polis.ContractFormCode = "2РН/2РП";
-            polis.ContractNumber = "12022";
-            polis.ContractSeries = "EI";
+
+            //--------------Example----------------
+            /*polis.ContractFormCode = "2РН/2РП";
+            polis.ContractNumber = "12028";
+            polis.ContractSeries = "EI";*/
+            //--------------Example----------------
+
+            polis.ContractFormCode = parameters.Get("form");
+            polis.ContractNumber = parameters.Get("number");
+            polis.ContractSeries = parameters.Get("series");
             ISAIS_GetInsuranceContractOfferResponse offer = client.GetInsuranceContractOffer(sessionId, nextToken, contractId, polis);
             nextToken = offer.NextTocken;
+
+            if(offer.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return offer.responseMessage;
+            }
 
             //--------------------------------------------------------------Начало транзакции оплаты по договору-----------------------------------------------------------------------
 
             ISAIS_InsuranceContractPayTransactionBeginResponse begin_trans = client.InsuranceContractPayTransactionBegin(sessionId, nextToken, contractId, ISAIS_PaymentProcType.PaymentConfirmation);
             nextToken = begin_trans.NextTocken;
+            if (begin_trans.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return begin_trans.responseMessage;
+            }
 
             //--------------------------------------------------------------Получение страхового тарифа и графика платежей-----------------------------------------------------------------------
 
             tarif = client.GetInsuranceContractTariff(sessionId, nextToken, contractId);
+            if (tarif.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return tarif.responseMessage;
+            }
             nextToken = tarif.NextTocken;
             ISAIS_PaymentSchedule[] schedule = tarif.PaymentSchedule;
             var payAmount = schedule[0].PayAmount;
@@ -288,6 +319,10 @@ namespace InsuranceIntegration.Controllers
             //--------------------------------------------------------------Завершение транзакции оплаты части взноса-----------------------------------------------------------------------
 
             ISAIS_InsuranceContractPayTransactionEndResponse end_trans = client.InsuranceContractPayTransactionEnd(sessionId, nextToken, contractId, contractTransID, payAmount, tariffCurrency, ISAIS_TransactionStatus.Success, "Ok");
+            if (end_trans.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return end_trans.responseMessage;
+            }
             nextToken = end_trans.NextTocken;
 
             /*//--------------------------------------------------------------Получение статуса договора страхования-----------------------------------------------------------------------
@@ -297,8 +332,21 @@ namespace InsuranceIntegration.Controllers
             //--------------------------------------------------------------Регистрация заключения договора со стороны Клиента-----------------------------------------------------------------------
 
             ISAIS_InsuranceContractCompletedResponse contractCompleted = client.InsuranceContractCompleted(sessionId, nextToken, contractId, contractTransID);
-
-            return contractCompleted.ToString();
+            if (contractCompleted.responseCode != ISAIS_ReturnCode.OK)
+            {
+                return contractCompleted.responseMessage;
+            }
+            else
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append("Код формы полиса: ");
+                builder.AppendLine(contractCompleted.ContractPolis.ContractFormCode);
+                builder.Append("Номер полиса: ");
+                builder.AppendLine(contractCompleted.ContractPolis.ContractNumber);
+                builder.Append("Серия полиса: ");
+                builder.AppendLine(contractCompleted.ContractPolis.ContractSeries);
+                return builder.ToString();
+            }
         }
 
 

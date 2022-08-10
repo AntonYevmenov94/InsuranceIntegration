@@ -108,7 +108,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\InsuranceIntegration - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\InsuranceIntegration20220502233420 - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\InsuranceIntegration20220602194151 - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
